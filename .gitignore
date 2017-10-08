@@ -7,6 +7,8 @@
 *.lo
 *.o
 *.obj
+*.vcxproj
+/Debug/
 
 # Precompiled Headers
 *.gch
