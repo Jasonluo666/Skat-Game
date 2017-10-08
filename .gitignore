@@ -8,7 +8,8 @@
 *.o
 *.obj
 *.vcxproj
-/Debug/
+/Skat/Debug/
+/Skat/Skat/Debug/
 
 # Precompiled Headers
 *.gch
