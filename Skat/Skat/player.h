@@ -1,7 +1,6 @@
 ﻿#pragma once
 #include "global.h"
 
-int compare(const void *a, const void *b);
 class Player {
 public:
 	Player(int playerNo);	
@@ -12,13 +11,15 @@ public:
 	string declareGame(int skat[2]);
 	string declareTrump();
 	void setGame(string gameType, string gameTrump);
-	void playCard(int* currentState);
+	void playCard(int* currentState, int playSequence);
 	void winCard(int card);
 	void setDeclarer(int playerNo);
 	int turnWinner(int* currentState);
 	int calculateValue();
 	int numberOfCards();
-	void setManual();
+	void setPlayerType(string playerType);
+	bool isBigger(int Card1, int Card2);
+	void updateState(int* currentState);
 private:
 	void sortCard();
 	int findGameLevel();
@@ -26,10 +27,22 @@ private:
 	string identifyValue(int valueNo);
 	string identifyCard(int cardNo);
 	int play(int suit, int num);
+	int cardValue(int Card);
+
+	// strategies
+	void manualPlayer(int* currentState, int playSequence);
+	void standardPlayer(int* currentState, int playSequence);
+	// Greedy optimisation-based Approach
+	void greedyPlayer(int* currentState, int playSequence);
+	// Monte-Carlo Tree Search
+	void MCTSPlayer(int* currentState, int playSequence);
+	// Learning Approach
+	void NNWPlayer(int* currentState, int playSequence);
+
 	int playerNo;
 	int numberAll;
 	int number[4];
-	int cards[4][10];
+	bool cards[4][8];
 	int maxGameValue;	// the highest value one could bid
 	int minGameValue;	// the lowest value one could bid
 	int gameValue;		// current game's value
@@ -39,6 +52,11 @@ private:
 	string gameType;
 	int trump;
 	int bidNumber;
+	bool gameState[4][8];
 
-	bool manualOperation;
+	bool Manual;
+	bool Standard;
+	bool Greedy;
+	bool MonteCarlo;
+	bool Learning;
 };

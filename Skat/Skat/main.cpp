@@ -3,11 +3,13 @@
 
 int main() {
 	cout << "hello world" << endl;
-	// humanPlayer = false, automatically play
-	bool humanPlayer = false;
-	int playerNo = 1;
 
-	skatGame(humanPlayer, playerNo);
+	//  Manual, Standard, Greedy, MonteCarlo, Learning
+	string playerType[3] = { "Standard", "Standard", "Standard" };
+
+	// humanPlayer = false, automatically play
+
+	skatGame(playerType);
 
 	system("pause");
 

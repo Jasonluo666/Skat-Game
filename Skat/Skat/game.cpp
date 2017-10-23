@@ -111,21 +111,30 @@ void Game(Player player[3], string gameType, string trump) {
 	player[2].setGame(gameType, trump);
 
 	//presume player[0~2] are forehand (F), middlehand (M) and rearhand (R)
-	for (int playerNo = 0, counter = 1, currentState[3]; counter <= 10; playerNo = (playerNo + 1) % 3) {
-		player[playerNo].playCard(currentState);
+	for (int playerNo = 0, counter = 1, currentState[3], turnCounter = 0; counter <= 10; turnCounter = (turnCounter + 1) % 3) {
+		player[playerNo].playCard(currentState, turnCounter);
+		playerNo = (playerNo + 1) % 3;
 
-		if (playerNo == 2) {		// one turn finished
+		if (turnCounter == 2) {		// one turn finished
+			player[0].updateState(currentState);
+			player[1].updateState(currentState);
+			player[2].updateState(currentState);
+
 			cout << "Turn " << counter << " finished" << endl;
-			cout << "player 0 plays " << suit[currentState[0] / 10].c_str() << card[currentState[0] % 10].c_str() << endl;
-			cout << "player 1 plays " << suit[currentState[1] / 10].c_str() << card[currentState[1] % 10].c_str() << endl;
-			cout << "player 2 plays " << suit[currentState[2] / 10].c_str() << card[currentState[2] % 10].c_str() << endl;
+			for (int playSequence = playerNo % 3, No = 0; No < 3; playSequence = (playSequence + 1) % 3, No++) {
+				if (currentState[0] % 10 < 0 || currentState[0] % 10 > 7 || currentState[1] % 10 < 0 || currentState[1] % 10 > 7 || currentState[2] % 10 < 0 || currentState[2] % 10 > 7)
+					cout << "aaa";
+				cout << "player" << playSequence << "plays " << suit[currentState[No] / 10].c_str() << card[currentState[No] % 10].c_str() << endl;
+			}
 			counter++;
 			// winner get 3 cards
 			int turnWinner = player[0].turnWinner(currentState);
-			cout << "player " << turnWinner << " win this turn" << endl;
-			player[turnWinner].winCard(currentState[0]);
-			player[turnWinner].winCard(currentState[1]);
-			player[turnWinner].winCard(currentState[2]);
+			playerNo = (playerNo + turnWinner) % 3;
+			cout << "player " << playerNo << " win this turn" << endl;
+			player[playerNo].winCard(currentState[0]);
+			player[playerNo].winCard(currentState[1]);
+			player[playerNo].winCard(currentState[2]);
+			// winner start next turn
 		}
 	}
 
@@ -163,16 +172,18 @@ void getSkat(bool mapDeal[4][8], int skat[2]) {
 
 }
 // skat game platform
-void skatGame(bool isManual, int humanPlayerNo) {
+void skatGame(string playerType[3]) {
 	// initialization
 	for (int i = 0; i < 4; i++)
 		for (int j = 0; j < 8; j++)
 			mapDeal[i][j] = false;
 
 	Player player[3] = { 0,1,2 };
-	// set human player
-	if (isManual)
-		player[humanPlayerNo].setManual();
+	
+	// set player straregies
+	player[0].setPlayerType(playerType[0]);
+	player[1].setPlayerType(playerType[0]);
+	player[2].setPlayerType(playerType[0]);
 
 	dealCard(player);
 

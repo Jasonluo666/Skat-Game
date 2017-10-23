@@ -1,6 +1,6 @@
 # Prerequisites
 *.d
-*.vs
+.vs
 
 # Compiled Object files
 *.slo
@@ -8,8 +8,10 @@
 *.o
 *.obj
 *.vcxproj
-/Skat/Debug/
-/Skat/Skat/Debug/
+*.log
+*.tlog
+/Skat/Debug
+/Debug
 
 # Precompiled Headers
 *.gch
