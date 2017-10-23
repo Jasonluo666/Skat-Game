@@ -120,6 +120,7 @@ void Game(Player player[3], string gameType, string trump) {
 			player[1].updateState(currentState);
 			player[2].updateState(currentState);
 
+
 			cout << "Turn " << counter << " finished" << endl;
 			for (int playSequence = playerNo % 3, No = 0; No < 3; playSequence = (playSequence + 1) % 3, No++) {
 				if (currentState[0] % 10 < 0 || currentState[0] % 10 > 7 || currentState[1] % 10 < 0 || currentState[1] % 10 > 7 || currentState[2] % 10 < 0 || currentState[2] % 10 > 7)
@@ -182,8 +183,8 @@ void skatGame(string playerType[3]) {
 	
 	// set player straregies
 	player[0].setPlayerType(playerType[0]);
-	player[1].setPlayerType(playerType[0]);
-	player[2].setPlayerType(playerType[0]);
+	player[1].setPlayerType(playerType[1]);
+	player[2].setPlayerType(playerType[2]);
 
 	dealCard(player);
 

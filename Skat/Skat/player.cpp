@@ -411,44 +411,158 @@ void Player::standardPlayer(int* currentState, int playSequence) {
 }
 // Greedy optimisation-based Approach
 void Player::greedyPlayer(int* currentState, int playSequence) {
-	int playCard = Empty, cardPosition = Empty;
-	int gainValue = cardValue(currentState[0]) + cardValue(currentState[1]);
+	int playCard = Empty;
+	int counter = 0;
 
-	// Declarer
-	if (playerNo == whosDeclarer) {
-		switch (playSequence) {
-		case 0:
-			
-			break;
-		case 1:
+	switch (playSequence) {
+	case 0:
+		// Ec = [Vc + Average(Vc2) + Average(Vc3)] * Average[P(c)]	
 
-			break;
-		case 2:
-			// Ec = (Vc1 + Vc2 + Vc) * P(Vc)
-			int Evaluation = 0;
+		for (int suit = 0; suit < 4; suit++) {
+			float winPossibility = 0;
+			float averageVc = 0;
+			for (int card = 0, possibleCardCount = 0, possibleStateCount = 0; card < 8; card++) {
+				if (cards[suit][card] == true) {
+					// calculate Average[P(c)] & Average(Vc) -> Average(Vc2)//Average(Vc3)
+					for (int p2Suit = 0; p2Suit < 4; p2Suit++)
+						for (int p2Card = 0; p2Card < 8; p2Card++)
+							// Player2's card
+							if (gameState[p2Card][p2Card] = true) {
+								for (int p3Suit = 0; p3Suit < 4; p3Suit++)
+									for (int p3Card = 0; p3Card < 8; p3Card++) {
+										if (p3Suit == p2Suit && p3Card == p2Card)
+											continue;
+										// Player3's card
+										if (gameState[p3Card][p3Card] = true) {
+											if (isBigger(cardToInt(suit, card), cardToInt(p2Suit, p2Card)) && isBigger(cardToInt(suit, card), cardToInt(p3Suit, p3Card)))
+												winPossibility++;
 
-			for (int suit = 0; suit < 4; suit++)
-				for (int card = 0, currentValue = 0, winPossibility = 0; card < number[suit]; card++) {
+											possibleStateCount++;
+										}
+									}
 
+								averageVc = averageVc + cardValue(cardToInt(p2Card, p2Card));
+								possibleCardCount++;
+							}
+					averageVc = averageVc / possibleCardCount;
+					winPossibility = winPossibility / possibleStateCount;
+
+
+					greedyEstimation[counter][0] = (float)cardToInt(suit, card);
+					greedyEstimation[counter++][1] = winPossibility * (cardValue(cardToInt(suit, card)) + 2 * averageVc);
 				}
-			break;
+			}
+		}
+
+		break;
+	case 1:
+		// Ec = [Vc1 + Vc + Average(Vc3)] * Average[P(c)]	
+
+		for (int suit = 0; suit < 4; suit++) {
+			float winPossibility = 0, winPossibility1 = 0, winPossibility2 = 0;
+			float averageVc3 = 0;
+			for (int card = 0, possibleStateCount = 0; card < 8; card++) {
+				if (cards[suit][card] == true) {
+					// calculate Average[P(c)] & Average(Vc3)
+					winPossibility1 = isBigger(currentState[0], cardToInt(suit, card)) ? 0 : 1;
+					for (int p3Suit = 0; p3Suit < 4; p3Suit++)
+						for (int p3Card = 0; p3Card < 8; p3Card++)
+							if (gameState[p3Suit][p3Card] = true) {
+								if (isBigger(cardToInt(suit, card), cardToInt(p3Suit, p3Card)))
+									winPossibility2++;
+								possibleStateCount++;
+								averageVc3 = averageVc3 + cardValue(cardToInt(suit, card));
+							}
+					winPossibility2 = winPossibility2 / possibleStateCount;
+					winPossibility = winPossibility1 * winPossibility2;
+					averageVc3 = averageVc3 / possibleStateCount;
+
+					greedyEstimation[counter][0] = (float) cardToInt(suit, card);
+					greedyEstimation[counter++][1] = winPossibility * (cardValue(currentState[0]) + cardValue(cardToInt(suit, card)) + averageVc3);
+				}
+			}
+		}
+
+		break;
+	case 2:
+		// Ec = (Vc1 + Vc2 + Vc) * P(c)
+
+		for (int suit = 0; suit < 4; suit++) {
+			float winPossibility = 0;
+			for (int card = 0; card < 8; card++) {
+				if (cards[suit][card] == true) {
+					// calculate the possibility to win -> P(c)
+					if (isBigger(currentState[0], currentState[1]) && !isBigger(currentState[0], cardToInt(suit, card)))
+						winPossibility = 1;
+					else if (!isBigger(currentState[0], currentState[1]) && !isBigger(currentState[1], cardToInt(suit, card)))
+						winPossibility = 1;
+					else
+						winPossibility = 0;
+
+					greedyEstimation[counter][0] = (float) cardToInt(suit, card);
+					greedyEstimation[counter++][1] = winPossibility * (cardValue(currentState[0]) + cardValue(currentState[1]) + cardValue(cardToInt(suit, card)));
+				}
+			}
+		}
+
+		break;
+	}
+
+	float maxEstimation = -1;
+	for (int num = 0; num < counter; num++) {
+		if (maxEstimation < greedyEstimation[num][1]) {
+			maxEstimation = greedyEstimation[num][1];
+			playCard = (int)greedyEstimation[num][0];
 		}
 	}
-	// Opponents
-	else {
-		switch (playSequence) {
-		case 0:
+	// impossible to win, choose the right suit
+	if (maxEstimation == 0 && playSequence != 0) {
+		int suit, lowestCard;
+		if (currentState[0] % 10 == 0)
+			suit = trump;
+		else
+			suit = currentState[0] / 10;
 
-			break;
-		case 1:
+		if (number[suit] > 0) {		// have current suit
+			if (suit == trump)
+				for (int num = 3; num >= 0; num--)
+					if (cards[num][0] == true) {
+						lowestCard = num * 10;
+						break;
+					}
 
-			break;
-		case 2:
+			for (int num = 7; num >= 0; num--)
+				if (cards[suit][num] == true) {
+					lowestCard = suit * 10 + num;
+					break;
+				}
+			currentState[playSequence] = play(lowestCard / 10, lowestCard % 10);
+		}
+		else {		// don't have current suit
+			int minValue = Empty, position, findMin;
+			for (int i = 0; i < 4; i++) {
+				if (i == trump || number[i] == 0)
+					continue;
+				for (findMin = 0; findMin < 8; findMin++) {
+					if (cards[i][findMin] == true && minValue < findMin) {
+						minValue = findMin;
+						position = i;
+					}
+				}
+			}
 
-			break;
+			if (minValue != Empty)		// have non-trump cards
+				currentState[playSequence] = play(position, minValue);
+			else						// need to play trump
+				for (findMin = 0; findMin < 8; findMin++)
+					if (cards[trump][findMin] == true) {
+						currentState[playSequence] = play(trump, findMin);
+						break;
+					}
 		}
 	}
-	currentState[playSequence] = play(playCard, cardPosition);
+	else
+		currentState[playSequence] = play(playCard / 10, playCard % 10);
 }
 
 // Monte-Carlo Tree Search
@@ -779,4 +893,8 @@ string Player::identifyValue(int valueNo) {
 // match integer with card
 string Player::identifyCard(int cardNo) {
 	return identifySuit(cardNo / 10) + identifyValue(cardNo % 10);
+}
+
+int Player::cardToInt(int suit, int value) {
+	return 10 * suit + value;
 }

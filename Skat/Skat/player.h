@@ -20,6 +20,7 @@ public:
 	void setPlayerType(string playerType);
 	bool isBigger(int Card1, int Card2);
 	void updateState(int* currentState);
+	int cardToInt(int suit, int value);
 private:
 	void sortCard();
 	int findGameLevel();
@@ -53,6 +54,7 @@ private:
 	int trump;
 	int bidNumber;
 	bool gameState[4][8];
+	float greedyEstimation[10][2];
 
 	bool Manual;
 	bool Standard;

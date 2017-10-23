@@ -3,8 +3,8 @@ Standard Player
 	-> 1 play wrong value (maybe)
 	-> 2 play wrong suit
 
-<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
 Greedy Player -> Implementation
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 Monte-Carlo Tree Implementation
