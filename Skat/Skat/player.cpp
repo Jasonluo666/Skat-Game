@@ -427,13 +427,13 @@ void Player::greedyPlayer(int* currentState, int playSequence) {
 					for (int p2Suit = 0; p2Suit < 4; p2Suit++)
 						for (int p2Card = 0; p2Card < 8; p2Card++)
 							// Player2's card
-							if (gameState[p2Card][p2Card] = true) {
+							if (gameState[p2Card][p2Card] == false) {
 								for (int p3Suit = 0; p3Suit < 4; p3Suit++)
 									for (int p3Card = 0; p3Card < 8; p3Card++) {
 										if (p3Suit == p2Suit && p3Card == p2Card)
 											continue;
 										// Player3's card
-										if (gameState[p3Card][p3Card] = true) {
+										if (gameState[p3Card][p3Card] == false) {
 											if (isBigger(cardToInt(suit, card), cardToInt(p2Suit, p2Card)) && isBigger(cardToInt(suit, card), cardToInt(p3Suit, p3Card)))
 												winPossibility++;
 
@@ -467,7 +467,7 @@ void Player::greedyPlayer(int* currentState, int playSequence) {
 					winPossibility1 = isBigger(currentState[0], cardToInt(suit, card)) ? 0 : 1;
 					for (int p3Suit = 0; p3Suit < 4; p3Suit++)
 						for (int p3Card = 0; p3Card < 8; p3Card++)
-							if (gameState[p3Suit][p3Card] = true) {
+							if (gameState[p3Suit][p3Card] == false) {
 								if (isBigger(cardToInt(suit, card), cardToInt(p3Suit, p3Card)))
 									winPossibility2++;
 								possibleStateCount++;

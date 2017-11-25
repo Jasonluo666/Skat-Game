@@ -113,6 +113,10 @@
   <ItemGroup>
     <ClInclude Include="game.h" />
     <ClInclude Include="global.h" />
+    <ClInclude Include="MCTS\mctsTest.h" />
+    <ClInclude Include="MCTS\MSALoopTimer.h" />
+    <ClInclude Include="MCTS\ofxMSAmcts.h" />
+    <ClInclude Include="MCTS\TreeNodeT.h" />
     <ClInclude Include="player.h" />
   </ItemGroup>
   <ItemGroup>
