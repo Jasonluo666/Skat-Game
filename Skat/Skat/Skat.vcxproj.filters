@@ -16,6 +16,9 @@
     <Filter Include="头文件\MCTS">
       <UniqueIdentifier>{9f5aab9c-8eae-495e-afbb-625ffc457329}</UniqueIdentifier>
     </Filter>
+    <Filter Include="源文件\MCTS">
+      <UniqueIdentifier>{8675bec7-ccc0-4616-81fc-40c1d9267d3f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="global.h">
@@ -27,9 +30,6 @@
     <ClInclude Include="game.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="MCTS\mctsTest.h">
-      <Filter>头文件\MCTS</Filter>
-    </ClInclude>
     <ClInclude Include="MCTS\MSALoopTimer.h">
       <Filter>头文件\MCTS</Filter>
     </ClInclude>
@@ -37,6 +37,9 @@
       <Filter>头文件\MCTS</Filter>
     </ClInclude>
     <ClInclude Include="MCTS\TreeNodeT.h">
+      <Filter>头文件\MCTS</Filter>
+    </ClInclude>
+    <ClInclude Include="MCTS\mctsTest.h">
       <Filter>头文件\MCTS</Filter>
     </ClInclude>
   </ItemGroup>
@@ -49,6 +52,9 @@
     </ClCompile>
     <ClCompile Include="game.cpp">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="MCTS\mctsTest.cpp">
+      <Filter>源文件\MCTS</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

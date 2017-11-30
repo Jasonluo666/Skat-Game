@@ -2,37 +2,46 @@
 #include "ofxMSAmcts.h"
 using namespace msa::mcts;
 
-namespace test {
+namespace mcts_skat {
+
+	bool is_bigger(int Card1, int Card2, int trump);
+
+	int turn_winner(int* currentState, int trump);
+
+	int card_value(int Card);
+
 	// play card action
 	struct Action {
 		int suit;
 		int value;
 	};
 
+	struct input_state_info {
+		bool cards[4][8];
+		bool gameState[4][8];
+		int player_id;
+		int declarer_id;
+		int current_suit;
+		int win_value[3];
+		int trump_suit;
+		int play_sequence[3];
+		int current_player;
+		int turn_count;
+	};
+
 	class State {
 	public:
-
 		//--------------------------------------------------------------
 		// MUST HAVE METHODS (INTERFACE)
 
-		State() {
-			for (int i = 0; i < 4; i++)
-				for (int j = 0; j < 8; j++) {
-					data.cards[i][j] = false;
-					//data.gameState[i][j] = false;
-				}
-			data.winValue[0] = data.winValue[1] = data.winValue[2] = 0;
+		State() { }
+
+		State(input_state_info input_state) {
+			this_state = input_state;
 		}
 
 		State(const State& other) {
-			for (int i = 0; i < 4; i++)
-				for (int j = 0; j < 8; j++) {
-					data.cards[i][j] = other.data.cards[i][j];
-					//data.gameState[i][j] = other.data.gameState[i][j];
-				}
-			data.winValue[0] = other.data.winValue[0];
-			data.winValue[1] = other.data.winValue[1];
-			data.winValue[2] = other.data.winValue[2];
+			this_state = other.this_state;
 		}
 
 		// default constructors will do
@@ -43,58 +52,217 @@ namespace test {
 
 		// whether or not this state is terminal (reached end)
 		bool is_terminal() const {
-			return false;
+			bool card_left = false;
+			int two_skat_cards = 0;
+
+			for(int suit = 0; suit < 4 ; suit++)
+				for (int card = 0; card < 8; card++) {
+					if (this_state.cards[suit][card])
+						card_left = true;
+					if (this_state.gameState[suit][card])
+						two_skat_cards++;
+				}
+
+			// check if all the cards are played
+			if (card_left || (two_skat_cards > 2 && this_state.player_id != this_state.declarer_id) || (two_skat_cards > 0 && this_state.player_id == this_state.declarer_id))
+				return false;
+			else
+				return true;
+			
 		}
 
 		//  agent id (zero-based) for agent who is about to make a decision
 		int agent_id() const {
-
-			return 0;
+			return this_state.current_player;
 		}
 
 		// apply action to state
 		void apply_action(const Action& action) {
-			data.cards[action.suit][action.value] = false;
-			//data.gameState[action.suit][action.value] = false;
+			this_state.gameState[action.suit][action.value] = false;
+			this_state.cards[action.suit][action.value] = false;
 
-			data.currentState[data.playSequence] = action.suit * 10 + action.value;
+			this_state.play_sequence[this_state.turn_count] = action.suit * 10 + action.value;
+
+			if (this_state.turn_count == 0) {
+				if (action.suit == this_state.trump_suit || action.value == 0)
+					this_state.current_suit = this_state.trump_suit;
+				else
+					this_state.current_suit = action.suit;
+			}
+
+			this_state.turn_count = (this_state.turn_count + 1) % 3;
+			this_state.current_player = (this_state.current_player + 1) % 3;
+
+			// new turn, calculate the previous turn
+			if (this_state.turn_count == 0) {
+				int winner = turn_winner(this_state.play_sequence, this_state.trump_suit);
+				
+				// set winner the first player for next turn
+				this_state.current_player = (winner + this_state.current_player) % 3;
+
+				// get all three cards
+				this_state.win_value[this_state.current_player] += card_value(this_state.play_sequence[0]);
+				this_state.win_value[this_state.current_player] += card_value(this_state.play_sequence[1]);
+				this_state.win_value[this_state.current_player] += card_value(this_state.play_sequence[2]);
+			}
 		}
 
 
 		// return possible actions from this state
 		void get_actions(std::vector<Action>& actions) const {
-			int action_number = 0;
-			int suit;
+			actions.resize(0);
+			// int action_number = 0;
 
-			switch (data.playSequence) {
-			case 0:
-				for(int suit = 0 ; suit < 4 ; suit++)
-					for (int value = 0; value < 8; value++) {
-						if (data.cards[suit][value] == true) {
-							Action* action = new Action();
-							action->suit = suit;
-							action->value = value;
+			// first player
+			if (this_state.turn_count == 0) {
+				if (this_state.current_player == this_state.player_id) {
+					for (int suit = 0; suit < 4; suit++) {
+						for (int value = 0; value < 8; value++) {
+							if (this_state.cards[suit][value] == true) {
+								Action* action = new Action();
+								action->suit = suit;
+								action->value = value;
 
-							actions[action_number++] = *action;
+								actions.push_back(*action);
+							}
 						}
 					}
-				break;
-			case 1:
-				suit = (data.currentState[0] % 10 == 0) ? data.trump : (data.currentState[0] / 10);
+				}
+				else {
+					for (int suit = 0; suit < 4; suit++) {
+						for (int value = 0; value < 8; value++) {
+							if (this_state.gameState[suit][value] == true) {
+								Action* action = new Action();
+								action->suit = suit;
+								action->value = value;
 
-
-				break;
-			case 2:
-				suit = (data.currentState[0] % 10 == 0) ? data.trump : (data.currentState[0] / 10);
-
-
-				break;
+								actions.push_back(*action);
+							}
+						}
+					}
+				}
 			}
-		}
+			// need to follow the suit
+			else {
+				if (this_state.current_player == this_state.player_id) {
+					// add all trumps
+					for (int value = 0; value < 8; value++) {
+						if (this_state.cards[this_state.trump_suit][value] == true) {
+							Action* action = new Action();
+							action->suit = this_state.trump_suit;
+							action->value = value;
 
+							actions.push_back(*action);
+						}
+					}
+
+					for (int suit = 0; suit < 4; suit++) {
+						if (suit == this_state.trump_suit || this_state.cards[suit][0] == false)
+							continue;
+						else {
+							Action* action = new Action();
+							action->suit = suit;
+							action->value = 0;
+
+							actions.push_back(*action);
+						}
+					}
+
+					// add current suit cards
+					if (this_state.current_suit != this_state.trump_suit) {
+						for (int value = 0; value < 8; value++) {
+							if (this_state.cards[this_state.current_suit][value] == true && value != 0) {
+								Action* action = new Action();
+								action->suit = this_state.current_suit;
+								action->value = value;
+
+								actions.push_back(*action);
+							}
+						}
+					}
+
+					// no current suit card
+					if (actions.size() == 0) {
+						for (int suit = 0; suit < 4; suit++) {
+							for (int value = 0; value < 8; value++) {
+								if (this_state.cards[suit][value] == true) {
+									Action* action = new Action();
+									action->suit = suit;
+									action->value = value;
+
+									actions.push_back(*action);
+								}
+							}
+						}
+					}
+				}
+				else {
+					// add all trumps
+					for (int value = 0; value < 8; value++) {
+						if (this_state.gameState[this_state.trump_suit][value] == true) {
+							Action* action = new Action();
+							action->suit = this_state.trump_suit;
+							action->value = value;
+
+							actions.push_back(*action);
+						}
+					}
+
+					for (int suit = 0; suit < 4; suit++) {
+						if (suit == this_state.trump_suit || this_state.gameState[suit][0] == false)
+							continue;
+						else {
+							Action* action = new Action();
+							action->suit = suit;
+							action->value = 0;
+
+							actions.push_back(*action);
+						}
+					}
+
+					// add current suit cards
+					if (this_state.current_suit != this_state.trump_suit) {
+						for (int value = 0; value < 8; value++) {
+							if (this_state.gameState[this_state.current_suit][value] == true && value != 0) {
+								Action* action = new Action();
+								action->suit = this_state.current_suit;
+								action->value = value;
+
+								actions.push_back(*action);
+							}
+						}
+					}
+
+					// no current suit card
+					if (actions.size() == 0) {
+						for (int suit = 0; suit < 4; suit++) {
+							for (int value = 0; value < 8; value++) {
+								if (this_state.gameState[suit][value] == true) {
+									Action* action = new Action();
+									action->suit = suit;
+									action->value = value;
+
+									actions.push_back(*action);
+								}
+							}
+						}
+					}
+				}
+			}
+
+			//actions.resize(action_number);
+		}
 
 		// get a random action, return false if no actions found
 		bool get_random_action(Action& action) const {
+			std::vector<Action> actions;			// possible actions from this state
+			get_actions(actions);
+
+			if (actions.size() == 0)
+				return false;
+
+			int random_action = rand() % actions.size();
+			action = actions[random_action];
 
 			return true;
 		}
@@ -104,16 +272,16 @@ namespace test {
 		const vector<float> evaluate() const {
 			vector<float> rewards(3);
 
-			if (data.winValue[data.declarer_id] > 61)
+			if (this_state.win_value[this_state.declarer_id] > 61)
 				for (int i = 0; i < 3; i++) {
-					if (i == data.declarer_id)
+					if (i == this_state.declarer_id)
 						rewards[i] = 1;
 					else
 						rewards[i] = 0;
 				}
 			else
 				for (int i = 0; i < 3; i++) {
-					if (i == data.declarer_id)
+					if (i == this_state.declarer_id)
 						rewards[i] = 0;
 					else
 						rewards[i] = 1;
@@ -123,15 +291,7 @@ namespace test {
 		}
 
 	private:
-		struct {
-			bool cards[4][8];
-			//gameState => cards
-			int winValue[3];
-			int agent_id;
-			int declarer_id;
-			int currentState[3];
-			int playSequence;
-			int trump;
-		} data;
+		input_state_info this_state;
 	};
+
 }

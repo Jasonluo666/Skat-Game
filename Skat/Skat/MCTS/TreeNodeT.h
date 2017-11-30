@@ -47,6 +47,11 @@ namespace msa {
                     // retrieve list of actions from the state
                     state.get_actions(actions);
 
+					if (actions.empty()) {
+						state.get_actions(actions);
+						state.is_terminal();
+					}			
+
                     // randomize the order
                     std::random_shuffle(actions.begin(), actions.end());
                 }

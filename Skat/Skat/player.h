@@ -21,6 +21,8 @@ public:
 	bool isBigger(int Card1, int Card2);
 	void updateState(int* currentState);
 	int cardToInt(int suit, int value);
+	void updateValue(int updatedValue[3]);
+	int cardValue(int Card);
 private:
 	void sortCard();
 	int findGameLevel();
@@ -28,7 +30,6 @@ private:
 	string identifyValue(int valueNo);
 	string identifyCard(int cardNo);
 	int play(int suit, int num);
-	int cardValue(int Card);
 
 	// strategies
 	void manualPlayer(int* currentState, int playSequence);
@@ -55,6 +56,7 @@ private:
 	int bidNumber;
 	bool gameState[4][8];
 	float greedyEstimation[10][2];
+	int winValue[3];
 
 	bool Manual;
 	bool Standard;

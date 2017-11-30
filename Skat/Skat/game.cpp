@@ -135,6 +135,12 @@ void Game(Player player[3], string gameType, string trump) {
 			player[playerNo].winCard(currentState[0]);
 			player[playerNo].winCard(currentState[1]);
 			player[playerNo].winCard(currentState[2]);
+
+			int winValue[3] = { 0,0,0 };
+			winValue[playerNo] = player[playerNo].cardValue(currentState[0]) + player[playerNo].cardValue(currentState[1]) + player[playerNo].cardValue(currentState[2]);
+			player[0].updateValue(winValue);
+			player[1].updateValue(winValue);
+			player[2].updateValue(winValue);
 			// winner start next turn
 		}
 	}

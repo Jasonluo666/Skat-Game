@@ -32,11 +32,11 @@ namespace msa {
 
             //--------------------------------------------------------------
             UCT() :
-                iterations(0),
+                iterations( 0 ),
                 uct_k( sqrt(2) ), 
-                max_iterations( 100 ),
+                max_iterations( 10 ),
                 max_millis( 0 ),
-                simulation_depth( 10 )
+                simulation_depth( 100 )
             {}
 
 

@@ -3,6 +3,7 @@
 Player::Player(int playerNo) {
 	this->playerNo = playerNo;
 	numberAll = number[0] = number[1] = number[2] = number[3] = 0;
+	winValue[0] = winValue[1] = winValue[2] = 0;
 	minGameValue = 18;
 	winCardsNumber = 0;
 	Manual = Standard = Greedy = MonteCarlo = Learning = false;
@@ -567,7 +568,50 @@ void Player::greedyPlayer(int* currentState, int playSequence) {
 
 // Monte-Carlo Tree Search
 void Player::MCTSPlayer(int* currentState, int playSequence) {
+	using namespace mcts_skat;
+	struct input_state_info input_data;
 
+	// initialization
+	for (int suit = 0; suit < 4; suit++)
+		for (int card = 0; card < 8; card++) {
+			input_data.cards[suit][card] = cards[suit][card];
+			input_data.gameState[suit][card] = !(gameState[suit][card]);
+		}
+
+	if (playSequence != 0) {
+		for (int i = 0; i < playSequence; i++)
+			input_data.gameState[currentState[i] / 10][currentState[i] % 10] = false;
+
+		if (currentState[0] / 10 == trump || currentState[0] % 10 == 0)
+			input_data.current_suit = trump;
+		else
+			input_data.current_suit = currentState[0] / 10;
+	}
+
+	input_data.current_player = playerNo;
+	input_data.player_id = playerNo;
+	input_data.declarer_id = whosDeclarer;
+	input_data.play_sequence[0] = currentState[0];
+	input_data.play_sequence[1] = currentState[1];
+	input_data.play_sequence[2] = currentState[2];
+	input_data.trump_suit = trump;
+	input_data.turn_count = playSequence;
+	input_data.win_value[0] = winValue[0];
+	input_data.win_value[1] = winValue[1];
+	input_data.win_value[2] = winValue[2];
+
+	// Monte-Carlo Tree Search (UCT)
+	msa::mcts::UCT<State, Action> Skat_MCTS;
+	State current_state(input_data);
+
+	// Time Constraint or Iteration Constraint
+	Skat_MCTS.max_iterations = 500;
+	Skat_MCTS.max_millis = 0;
+
+	// MCTS
+	Action best_action = Skat_MCTS.run(current_state);
+
+	currentState[playSequence] = play(best_action.suit, best_action.value);
 }
 
 // Learning Approach
@@ -897,4 +941,10 @@ string Player::identifyCard(int cardNo) {
 
 int Player::cardToInt(int suit, int value) {
 	return 10 * suit + value;
+}
+
+void Player::updateValue(int updatedValue[3]) {
+	winValue[0] += updatedValue[0];
+	winValue[1] += updatedValue[1];
+	winValue[2] += updatedValue[2];
 }
