@@ -605,8 +605,9 @@ void Player::MCTSPlayer(int* currentState, int playSequence) {
 	State current_state(input_data);
 
 	// Time Constraint or Iteration Constraint
-	Skat_MCTS.max_iterations = 500;
-	Skat_MCTS.max_millis = 0;
+	Skat_MCTS.max_iterations = 0;
+
+	Skat_MCTS.max_millis = 800;
 
 	// MCTS
 	Action best_action = Skat_MCTS.run(current_state);

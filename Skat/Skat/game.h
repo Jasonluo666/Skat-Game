@@ -5,6 +5,8 @@
 void dealCard(Player player[3]);
 int Biding(Player player[3]);
 void Game(Player player[3], string gameType, string trump);
-void valueCalculation(Player player[3], int declarer);
+bool valueCalculation(Player player[3], int declarer);
 void getSkat(bool mapDeal[4][8], int skat[2]);
-void skatGame(string playerType[3]);
+bool skatGame(string playerType[2]);
+void historyInitialize(int discard[2]);
+void recordHistory(int turn, int turnWinner, int currentState[3]);

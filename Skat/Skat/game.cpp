@@ -13,6 +13,47 @@ string suit[4] = { "Club", "Spade", "Heart ", "Diamond" };
 bool mapDeal[4][8];
 int skat[2];
 
+// record the history (for NNW training)
+int turnPlay[10][2][3];
+bool turnMap[10][4][8];
+int previousWinner;
+
+void historyInitialize(int discard[2]) {
+	previousWinner = 0;
+
+	for (int turn = 0; turn < 10; turn++) {
+		for (int suit = 0; suit < 4; suit++) {
+			for (int card = 0; card < 8; card++) {
+				if ((suit == discard[0] / 10 && card == discard[0] % 10) || (suit == discard[1] / 10 && card == discard[1] % 10))
+					turnMap[turn][suit][card] = false;
+				else
+					turnMap[turn][suit][card] = true;
+			}
+		}
+	}
+
+}
+
+void recordHistory(int turn, int turnWinner, int currentState[3]) {
+	// play sequence for this turn
+	turnPlay[turn][0][0] = previousWinner;
+	turnPlay[turn][0][1] = (previousWinner + 1) % 3;
+	turnPlay[turn][0][2] = (previousWinner + 2) % 3;
+	previousWinner = turnWinner;
+
+	// cards that are played
+	turnPlay[turn][1][0] = currentState[0];
+	turnPlay[turn][1][1] = currentState[1];
+	turnPlay[turn][1][2] = currentState[2];
+
+	// update map
+	for (int currentTurn = turn; currentTurn < 10; currentTurn++) {
+		turnMap[currentTurn][currentState[0] / 10][currentState[0] % 10] = false;
+		turnMap[currentTurn][currentState[1] / 10][currentState[1] % 10] = false;
+		turnMap[currentTurn][currentState[2] / 10][currentState[2] % 10] = false;
+	}
+}
+
 void dealCard(Player player[3]) {
 	/*
 	actual game: The dealer deals a batch of three cards to each player,
@@ -147,7 +188,7 @@ void Game(Player player[3], string gameType, string trump) {
 
 	cout << "Game over" << endl;
 }
-void valueCalculation(Player player[3], int declarer) {
+bool valueCalculation(Player player[3], int declarer) {
 	int calcDeclarer = 0, calcOpponents = 0;
 	for (int playerNo = 0, currentValue; playerNo < 3; playerNo++) {
 		currentValue = player[playerNo].calculateValue();
@@ -159,10 +200,16 @@ void valueCalculation(Player player[3], int declarer) {
 		else
 			calcOpponents += currentValue;
 	}
-	if (calcDeclarer > calcOpponents)		// get more than 61 points
+	if (calcDeclarer > calcOpponents) {		// get more than 61 points
 		cout << "Declarer wins with the highest value " << calcDeclarer << endl;
-	else
+		
+		return 1;
+	}
+	else {
 		cout << "Opponents wins with the highest value " << calcOpponents << endl;
+
+		return 0;
+	}
 }
 
 // find the 2 skat cards
@@ -179,22 +226,29 @@ void getSkat(bool mapDeal[4][8], int skat[2]) {
 
 }
 // skat game platform
-void skatGame(string playerType[3]) {
+bool skatGame(string playerType[2]) {
 	// initialization
 	for (int i = 0; i < 4; i++)
 		for (int j = 0; j < 8; j++)
 			mapDeal[i][j] = false;
 
 	Player player[3] = { 0,1,2 };
-	
-	// set player straregies
-	player[0].setPlayerType(playerType[0]);
-	player[1].setPlayerType(playerType[1]);
-	player[2].setPlayerType(playerType[2]);
 
 	dealCard(player);
 
 	int declarerNo = Biding(player);
+
+	// set player straregies
+	for (int i = 0; i < 3; i++) {
+		if (i == declarerNo) {
+			cout << "Player " << i << " uses " << playerType[0].c_str() << endl;
+			player[i].setPlayerType(playerType[0]);
+		}
+		else {
+			cout << "Player " << i << " uses " << playerType[1].c_str() << endl;
+			player[i].setPlayerType(playerType[1]);
+		}
+	}
 
 	getSkat(mapDeal, skat);
 
@@ -202,12 +256,14 @@ void skatGame(string playerType[3]) {
 
 	if (trump == "Over Bid") {
 		cout << "Player " << declarerNo << " Over Bid." << endl;
-		return;
+		
+		cout << "Restart.." << endl;
+		return skatGame(playerType);
 	}
 
 	cout << "Player " << declarerNo << " wins the bid and declares " << gameType.c_str() << " game with trump->" << trump.c_str() << endl;
 
 	Game(player, gameType, trump);
 
-	valueCalculation(player, declarerNo);
+	return valueCalculation(player, declarerNo);
 }

@@ -40,7 +40,8 @@ namespace msa {
                 if(is_fully_expanded()) return NULL;
 
                 // sanity check that we don't have more children than we do actions
-                //assert(children.size() < actions.size()) ;
+                //if(children.size() > actions.size())
+				//	cout << "...";
 
                 // if this is the first expansion and we haven't yet got all of the possible actions
                 if(actions.empty()) {
