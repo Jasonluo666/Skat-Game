@@ -13,47 +13,6 @@ string suit[4] = { "Club", "Spade", "Heart ", "Diamond" };
 bool mapDeal[4][8];
 int skat[2];
 
-// record the history (for NNW training)
-int turnPlay[10][2][3];
-bool turnMap[10][4][8];
-int previousWinner;
-
-void historyInitialize(int discard[2]) {
-	previousWinner = 0;
-
-	for (int turn = 0; turn < 10; turn++) {
-		for (int suit = 0; suit < 4; suit++) {
-			for (int card = 0; card < 8; card++) {
-				if ((suit == discard[0] / 10 && card == discard[0] % 10) || (suit == discard[1] / 10 && card == discard[1] % 10))
-					turnMap[turn][suit][card] = false;
-				else
-					turnMap[turn][suit][card] = true;
-			}
-		}
-	}
-
-}
-
-void recordHistory(int turn, int turnWinner, int currentState[3]) {
-	// play sequence for this turn
-	turnPlay[turn][0][0] = previousWinner;
-	turnPlay[turn][0][1] = (previousWinner + 1) % 3;
-	turnPlay[turn][0][2] = (previousWinner + 2) % 3;
-	previousWinner = turnWinner;
-
-	// cards that are played
-	turnPlay[turn][1][0] = currentState[0];
-	turnPlay[turn][1][1] = currentState[1];
-	turnPlay[turn][1][2] = currentState[2];
-
-	// update map
-	for (int currentTurn = turn; currentTurn < 10; currentTurn++) {
-		turnMap[currentTurn][currentState[0] / 10][currentState[0] % 10] = false;
-		turnMap[currentTurn][currentState[1] / 10][currentState[1] % 10] = false;
-		turnMap[currentTurn][currentState[2] / 10][currentState[2] % 10] = false;
-	}
-}
-
 void dealCard(Player player[3]) {
 	/*
 	actual game: The dealer deals a batch of three cards to each player,
@@ -61,9 +20,9 @@ void dealCard(Player player[3]) {
 	then a batch of four cards to each player, and finally another batch of three cards each.
 
 	implement in computer: use random() instead, only restriction is -> 10 cards for each & 2 skat cards
-	*/
+	srand((unsigned)time(0));	*/
 
-	srand((unsigned)time(0));
+
 	cout << "Deal the card.." << endl;
 
 	for (int playerNo = 0; playerNo < 3; playerNo++)
@@ -226,7 +185,7 @@ void getSkat(bool mapDeal[4][8], int skat[2]) {
 
 }
 // skat game platform
-bool skatGame(string playerType[2]) {
+bool skatGame(string playerType[2], History *NNWdata) {
 	// initialization
 	for (int i = 0; i < 4; i++)
 		for (int j = 0; j < 8; j++)
@@ -258,12 +217,21 @@ bool skatGame(string playerType[2]) {
 		cout << "Player " << declarerNo << " Over Bid." << endl;
 		
 		cout << "Restart.." << endl;
-		return skatGame(playerType);
+		return skatGame(playerType, NNWdata);
 	}
 
 	cout << "Player " << declarerNo << " wins the bid and declares " << gameType.c_str() << " game with trump->" << trump.c_str() << endl;
 
 	Game(player, gameType, trump);
 
-	return valueCalculation(player, declarerNo);
+	// **************************** record history **************************** //
+	bool isDeclarerWin = valueCalculation(player, declarerNo);
+	if (isDeclarerWin) {
+		player[declarerNo].historyRecord(NNWdata);
+
+		return 1;
+	}
+	else
+		return 0;
+	// ************************************************************************ //
 }

@@ -13,3 +13,10 @@ using namespace std;
 #define Base_Value_Heart	10
 #define Base_Value_Diamond	9
 #define INF					99999
+
+struct History {
+	bool cards[4][8];
+	bool gameState[4][8];
+	int currentState[3];
+	int action;
+};

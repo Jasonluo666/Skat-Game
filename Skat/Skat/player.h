@@ -23,6 +23,9 @@ public:
 	int cardToInt(int suit, int value);
 	void updateValue(int updatedValue[3]);
 	int cardValue(int Card);
+
+	void historyRecord(History* gameHistory);
+
 private:
 	void sortCard();
 	int findGameLevel();
@@ -63,4 +66,6 @@ private:
 	bool Greedy;
 	bool MonteCarlo;
 	bool Learning;
+
+	History record[10];
 };

@@ -607,7 +607,7 @@ void Player::MCTSPlayer(int* currentState, int playSequence) {
 	// Time Constraint or Iteration Constraint
 	Skat_MCTS.max_iterations = 0;
 
-	Skat_MCTS.max_millis = 800;
+	Skat_MCTS.max_millis = 400;
 
 	// MCTS
 	Action best_action = Skat_MCTS.run(current_state);
@@ -651,11 +651,33 @@ bool Player::isBigger(int Card1, int Card2) {
 	}
 }
 
+// return the game history
+void Player::historyRecord(History* gameHistory) {
+	// do not include pointer -> copy directly
+	for (int turn = 0; turn < 10; turn++)
+		gameHistory[turn] = record[turn];
+}
+
 // find solution here
 void Player::playCard(int* currentState, int playSequence) {
 	int playCard = 0;	// integer parameter: [suit][value]
 	currentState[playSequence] = Empty;
 	// currentState[playSequence] = playCard;		// play the card here
+	
+	// **************************** record history **************************** //
+	int turn = 10 - numberAll;
+
+	for (int suit = 0; suit < 4; suit++) {
+		for (int card = 0; card < 8; card++) {
+			record[turn].cards[suit][card] = cards[suit][card];
+			record[turn].gameState[suit][card] = gameState[suit][card];
+		}
+	}
+
+	record[turn].currentState[0] = currentState[0];
+	record[turn].currentState[1] = currentState[1];
+	record[turn].currentState[2] = currentState[2];
+	// ************************************************************************ //
 
 	/* plug the play solution here */
 	if (Manual) {
@@ -678,6 +700,9 @@ void Player::playCard(int* currentState, int playSequence) {
 	}
 	/* plug the play solution here */
 
+	// **************************** record history **************************** //
+	record[turn].action = currentState[playSequence];
+	// ************************************************************************ //
 }
 // one who can bid the game value
 int Player::bidCaller(int currentBid) {

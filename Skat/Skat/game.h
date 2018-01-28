@@ -7,6 +7,4 @@ int Biding(Player player[3]);
 void Game(Player player[3], string gameType, string trump);
 bool valueCalculation(Player player[3], int declarer);
 void getSkat(bool mapDeal[4][8], int skat[2]);
-bool skatGame(string playerType[2]);
-void historyInitialize(int discard[2]);
-void recordHistory(int turn, int turnWinner, int currentState[3]);
+bool skatGame(string playerType[2], History *NNWdata);
