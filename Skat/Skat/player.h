@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "global.h"
+#include "MCTS/mctsTest.h"
 
 class Player {
 public:
@@ -42,7 +43,7 @@ private:
 	// Monte-Carlo Tree Search
 	void MCTSPlayer(int* currentState, int playSequence);
 	// Learning Approach
-	void NNWPlayer(int* currentState, int playSequence);
+	void NNWPlayer(int* currentState, int playSequence, PyObject* pFunc);
 
 	int playerNo;
 	int numberAll;
@@ -68,4 +69,7 @@ private:
 	bool Learning;
 
 	History record[10];
+
+	PyObject* pModule;
+	PyObject* pFunc;
 };

@@ -2,7 +2,8 @@
 #include "iostream"
 #include <stdlib.h>
 #include <time.h> 
-#include "MCTS/mctsTest.h"
+#include "fstream"
+#include "Python.h"
 
 using namespace std;
 #define	Bid_Start			0

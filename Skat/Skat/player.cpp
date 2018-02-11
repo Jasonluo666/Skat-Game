@@ -7,6 +7,8 @@ Player::Player(int playerNo) {
 	minGameValue = 18;
 	winCardsNumber = 0;
 	Manual = Standard = Greedy = MonteCarlo = Learning = false;
+	pModule = NULL;
+	pFunc = NULL;
 
 	for (int i = 0; i < 4; i++)
 		for (int j = 0; j < 8; j++) {
@@ -616,8 +618,94 @@ void Player::MCTSPlayer(int* currentState, int playSequence) {
 }
 
 // Learning Approach
-void Player::NNWPlayer(int* currentState, int playSequence) {
+void Player::NNWPlayer(int* currentState, int playSequence, PyObject* pFunc) {
+	string NNW_input;
+	int length_counter = 0;
+	int turn = 10 - numberAll;
+	NNW_input.resize(200);
 
+	// cards agent holds
+	for (int suit = 0; suit < 4; suit++) {
+		for (int card = 0; card < 8; card++) {
+			NNW_input[length_counter++] = record[turn].cards[suit][card] + '0';
+			NNW_input[length_counter++] = ' ';
+		}
+	}
+
+	// cards other two players hold
+	for (int suit = 0; suit < 4; suit++) {
+		for (int card = 0; card < 8; card++) {
+			NNW_input[length_counter++] = record[turn].gameState[suit][card] + '0';
+			NNW_input[length_counter++] = ' ';
+		}
+	}
+
+	// cards that have been played in this turn
+	for (int suit = 0; suit < 4; suit++) {
+		for (int card = 0; card < 8; card++) {
+			if ((suit == currentState[0] / 10 && card == currentState[0] % 10)
+				|| (suit == currentState[1] / 10 && card == currentState[1] % 10))
+				NNW_input[length_counter++] = '1';
+			else
+				NNW_input[length_counter++] = '0';
+
+			NNW_input[length_counter++] = ' ';
+		}
+	}
+
+	//创建参数:
+	PyObject *pArgs = PyTuple_New(1);		//函数调用的参数传递均是以元组的形式打包的,2表示参数个数
+	PyTuple_SetItem(pArgs, 0, Py_BuildValue("s", NNW_input.c_str()));		//0--序号,i表示创建int型变量
+	// PyTuple_SetItem(pArgs, 1, Py_BuildValue("i", 2));		//0--序号,i表示创建int型变量
+
+
+	PyObject *pReturn = NULL;		//返回值
+	pReturn = PyEval_CallObject(pFunc, pArgs);		//调用函数
+	//将返回值转换为int类型
+	char* result_char;
+	int flag = PyArg_Parse(pReturn, "s", &result_char);		//i表示转换成int型变量
+	string result_str = result_char;
+	string single_data;
+	float data[32];
+
+	for (int counter = 0, pos1 = 0, pos2; counter < 32; counter++) {
+		pos2 = result_str.find(' ', pos1);
+		single_data = result_str.substr(pos1, pos2 - pos1);
+		data[counter] = atof(single_data.c_str());
+
+		pos1 = pos2 + 1;
+	}
+
+	// get four actions that NNW suggests to take
+	float action_prob[3] = { 0, 0, 0 };
+	int action[3];
+
+	for (int suit = 0; suit < 4; suit++) {
+		for (int card = 0; card < 8; card++) {
+			if (cards[suit][card]) {
+				if (data[suit * 8 + card] > action_prob[0]) {		// data -> actions[0] -> actions[1] -> actions[2]
+					action_prob[2] = action_prob[1];
+					action_prob[2] = action_prob[1];
+					action_prob[1] = action_prob[0];
+					action_prob[1] = action_prob[0];
+					action_prob[0] = data[suit * 8 + card];
+					action[0] = suit * 10 + card;
+				}
+				else if (data[suit * 8 + card] > action_prob[1]) {		// data -> actions[1] -> actions[2]
+					action_prob[2] = action_prob[1];
+					action_prob[2] = action_prob[1];
+					action_prob[1] = data[suit * 8 + card];
+					action[1] = suit * 10 + card;
+				}
+				else if (data[suit * 8 + card] > action_prob[2]) {		// data -> actions[2]
+					action_prob[2] = data[suit * 8 + card];
+					action[2] = suit * 10 + card;
+				}
+			}
+		}
+	}
+
+	currentState[playSequence] = play(action[0] / 10, action[0] % 10);
 }
 
 // update game state after every turn
@@ -693,7 +781,14 @@ void Player::playCard(int* currentState, int playSequence) {
 		MCTSPlayer(currentState, playSequence);
 	}
 	else if (Learning) {
-		NNWPlayer(currentState, playSequence);
+		// load the Keras NNW (python)
+		if (pModule == NULL || pFunc == NULL) {
+			// PyRun_SimpleString("import keras");
+			pModule = PyImport_ImportModule("NNW_Player");
+			pFunc = PyObject_GetAttrString(pModule, "nnw_player");
+		}
+
+		NNWPlayer(currentState, playSequence, pFunc);
 	}
 	else {
 		cout << "not suitable player strategies" << endl;

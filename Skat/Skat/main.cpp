@@ -1,15 +1,20 @@
 ﻿#include "global.h"
 #include "game.h"
-#include "MCTS/mctsTest.h"
-#include "fstream"
 
 using namespace mcts_skat;
 
 int main() {
 	//  [0]:Declarer [1]:Opponent -> Manual, Standard, Greedy, MonteCarlo, Learning
-	string playerType[2] = { "MonteCarlo", "Greedy" };
+	string playerType[2] = { "Learning", "Standard" };
 
-	int declarerWinCount = 0, totalCount = 2000;
+	// prepare to load Keras (Python function)
+	if (playerType[0] == "Learning" || playerType[1] == "Learning") {
+		Py_Initialize();
+		PyRun_SimpleString("import sys");
+		PyRun_SimpleString("sys.path.append('C:/Users/ljsPC/Desktop/NNW_Player/')");
+	}
+
+	int declarerWinCount = 0, totalCount = 20;
 	float result = 0;
 
 	History NNWdata[10];	// training data
@@ -76,6 +81,10 @@ int main() {
 	result = (float)declarerWinCount / totalCount;
 	std::cout << "Result: " << declarerWinCount << "/" << totalCount << " = " << result << endl;
 	// msa::LoopTimer::test(10000);
+
+	// close Keras (Python function)
+	if (playerType[0] == "Learning" || playerType[1] == "Learning")
+		Py_Finalize();
 
 	Training_Data.close();
 	std::system("pause");
