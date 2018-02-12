@@ -654,21 +654,19 @@ void Player::NNWPlayer(int* currentState, int playSequence, PyObject* pFunc) {
 	}
 
 	//创建参数:
-	PyObject *pArgs = PyTuple_New(1);		//函数调用的参数传递均是以元组的形式打包的,2表示参数个数
-	PyTuple_SetItem(pArgs, 0, Py_BuildValue("s", NNW_input.c_str()));		//0--序号,i表示创建int型变量
-	// PyTuple_SetItem(pArgs, 1, Py_BuildValue("i", 2));		//0--序号,i表示创建int型变量
+	PyObject *pArgs = PyTuple_New(1);		// set parameter number
+	PyTuple_SetItem(pArgs, 0, Py_BuildValue("s", NNW_input.c_str()));		// convert string(c++) data into string(python)
 
-
-	PyObject *pReturn = NULL;		//返回值
-	pReturn = PyEval_CallObject(pFunc, pArgs);		//调用函数
+	PyObject *pReturn = NULL;
+	pReturn = PyEval_CallObject(pFunc, pArgs);		// get the return value(python)
 	//将返回值转换为int类型
 	char* result_char;
-	int flag = PyArg_Parse(pReturn, "s", &result_char);		//i表示转换成int型变量
+	int flag = PyArg_Parse(pReturn, "s", &result_char);		// convert string(python) data into string(c++)
 	string result_str = result_char;
 	string single_data;
 	float data[32];
 
-	for (int counter = 0, pos1 = 0, pos2; counter < 32; counter++) {
+	for (int counter = 0, pos1 = 0, pos2; counter < 32; counter++) {		// save data into an array
 		pos2 = result_str.find(' ', pos1);
 		single_data = result_str.substr(pos1, pos2 - pos1);
 		data[counter] = atof(single_data.c_str());
@@ -678,28 +676,88 @@ void Player::NNWPlayer(int* currentState, int playSequence, PyObject* pFunc) {
 
 	// get four actions that NNW suggests to take
 	float action_prob[3] = { 0, 0, 0 };
-	int action[3];
+	int action[3] = { Empty, Empty ,Empty };
 
-	for (int suit = 0; suit < 4; suit++) {
-		for (int card = 0; card < 8; card++) {
-			if (cards[suit][card]) {
-				if (data[suit * 8 + card] > action_prob[0]) {		// data -> actions[0] -> actions[1] -> actions[2]
-					action_prob[2] = action_prob[1];
-					action_prob[2] = action_prob[1];
-					action_prob[1] = action_prob[0];
-					action_prob[1] = action_prob[0];
-					action_prob[0] = data[suit * 8 + card];
-					action[0] = suit * 10 + card;
+	// first player
+	if (playSequence == 0) {
+		for (int suit = 0; suit < 4; suit++) {
+			for (int card = 0; card < 8; card++) {
+				if (cards[suit][card]) {
+					if (data[suit * 8 + card] > action_prob[0]) {		// data -> actions[0] -> actions[1] -> actions[2]
+						action_prob[2] = action_prob[1];
+						action_prob[2] = action_prob[1];
+						action_prob[1] = action_prob[0];
+						action_prob[1] = action_prob[0];
+						action_prob[0] = data[suit * 8 + card];
+						action[0] = suit * 10 + card;
+					}
+					else if (data[suit * 8 + card] > action_prob[1]) {		// data -> actions[1] -> actions[2]
+						action_prob[2] = action_prob[1];
+						action_prob[2] = action_prob[1];
+						action_prob[1] = data[suit * 8 + card];
+						action[1] = suit * 10 + card;
+					}
+					else if (data[suit * 8 + card] > action_prob[2]) {		// data -> actions[2]
+						action_prob[2] = data[suit * 8 + card];
+						action[2] = suit * 10 + card;
+					}
 				}
-				else if (data[suit * 8 + card] > action_prob[1]) {		// data -> actions[1] -> actions[2]
-					action_prob[2] = action_prob[1];
-					action_prob[2] = action_prob[1];
-					action_prob[1] = data[suit * 8 + card];
-					action[1] = suit * 10 + card;
+			}
+		}
+	}
+	// need to follow the suit
+	else {
+		int current_suit = currentState[0] / 10;
+
+		for (int suit = 0; suit < 4; suit++) {
+			for (int card = 0; card < 8; card++) {
+				if (cards[suit][card] && (suit == trump || suit == current_suit || card == 0)) {
+					if (data[suit * 8 + card] > action_prob[0]) {		// data -> actions[0] -> actions[1] -> actions[2]
+						action_prob[2] = action_prob[1];
+						action_prob[2] = action_prob[1];
+						action_prob[1] = action_prob[0];
+						action_prob[1] = action_prob[0];
+						action_prob[0] = data[suit * 8 + card];
+						action[0] = suit * 10 + card;
+					}
+					else if (data[suit * 8 + card] > action_prob[1]) {		// data -> actions[1] -> actions[2]
+						action_prob[2] = action_prob[1];
+						action_prob[2] = action_prob[1];
+						action_prob[1] = data[suit * 8 + card];
+						action[1] = suit * 10 + card;
+					}
+					else if (data[suit * 8 + card] > action_prob[2]) {		// data -> actions[2]
+						action_prob[2] = data[suit * 8 + card];
+						action[2] = suit * 10 + card;
+					}
 				}
-				else if (data[suit * 8 + card] > action_prob[2]) {		// data -> actions[2]
-					action_prob[2] = data[suit * 8 + card];
-					action[2] = suit * 10 + card;
+			}
+		}
+
+		// no suitable card to play
+		if (action[0] == Empty) {
+			for (int suit = 0; suit < 4; suit++) {
+				for (int card = 0; card < 8; card++) {
+					if (cards[suit][card]) {
+						if (data[suit * 8 + card] > action_prob[0]) {		// data -> actions[0] -> actions[1] -> actions[2]
+							action_prob[2] = action_prob[1];
+							action_prob[2] = action_prob[1];
+							action_prob[1] = action_prob[0];
+							action_prob[1] = action_prob[0];
+							action_prob[0] = data[suit * 8 + card];
+							action[0] = suit * 10 + card;
+						}
+						else if (data[suit * 8 + card] > action_prob[1]) {		// data -> actions[1] -> actions[2]
+							action_prob[2] = action_prob[1];
+							action_prob[2] = action_prob[1];
+							action_prob[1] = data[suit * 8 + card];
+							action[1] = suit * 10 + card;
+						}
+						else if (data[suit * 8 + card] > action_prob[2]) {		// data -> actions[2]
+							action_prob[2] = data[suit * 8 + card];
+							action[2] = suit * 10 + card;
+						}
+					}
 				}
 			}
 		}
