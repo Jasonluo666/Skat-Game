@@ -10,8 +10,8 @@
 *.vcxproj
 *.log
 *.tlog
-/Skat/Debug
-/Debug
+Debug/
+x64/
 
 # Precompiled Headers
 *.gch
