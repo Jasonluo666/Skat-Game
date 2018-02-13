@@ -5,11 +5,11 @@ from keras.layers import Dense, Dropout
 import h5py
 import re
 
+# load the existing NNW
+model = load_model('C:/Users/ljsPC/Desktop/NNW_Player/NNW_SKAT.h5')
+
 def nnw_player(current_state = "NULL"):
     # print('input: ', current_state)    # test input
-
-    # load the existing NNW
-    model = load_model('C:/Users/ljsPC/Desktop/NNW_Player/NNW_SKAT.h5')
 
     data_split = re.split(' ',current_state)
     data_split = list(map(int, data_split[0:96]))     # convert to a list of int
