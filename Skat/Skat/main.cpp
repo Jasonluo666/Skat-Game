@@ -4,8 +4,8 @@
 using namespace mcts_skat;
 
 int main() {
-	//  [0]:Declarer [1]:Opponent -> Manual, Standard, Greedy, MonteCarlo, Learning
-	string playerType[2] = { "Learning", "Standard" };
+	//  [0]:Declarer [1]:Opponent -> Manual, Standard, Random, Greedy, MonteCarlo, Learning
+	string playerType[2] = { "MonteCarlo", "Random" };
 
 	// prepare to load Keras (Python function)
 	if (playerType[0] == "Learning" || playerType[1] == "Learning") {
@@ -14,7 +14,7 @@ int main() {
 		PyRun_SimpleString("sys.path.append('C:/Users/ljsPC/Desktop/NNW_Player/')");
 	}
 
-	int declarerWinCount = 0, totalCount = 100;
+	int declarerWinCount = 0, totalCount = 20;
 	float result = 0;
 
 	History NNWdata[10];	// training data

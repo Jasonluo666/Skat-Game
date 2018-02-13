@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "global.h"
 #include "MCTS/mctsTest.h"
+#include "random"
 
 class Player {
 public:
@@ -38,6 +39,7 @@ private:
 	// strategies
 	void manualPlayer(int* currentState, int playSequence);
 	void standardPlayer(int* currentState, int playSequence);
+	void randomPlayer(int* currentState, int playSequence);
 	// Greedy optimisation-based Approach
 	void greedyPlayer(int* currentState, int playSequence);
 	// Monte-Carlo Tree Search
@@ -64,6 +66,7 @@ private:
 
 	bool Manual;
 	bool Standard;
+	bool Random;
 	bool Greedy;
 	bool MonteCarlo;
 	bool Learning;

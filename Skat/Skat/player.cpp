@@ -6,7 +6,7 @@ Player::Player(int playerNo) {
 	winValue[0] = winValue[1] = winValue[2] = 0;
 	minGameValue = 18;
 	winCardsNumber = 0;
-	Manual = Standard = Greedy = MonteCarlo = Learning = false;
+	Manual = Standard = Random = Greedy = MonteCarlo = Learning = false;
 	pModule = NULL;
 	pFunc = NULL;
 
@@ -87,6 +87,8 @@ void Player::setPlayerType(string playerType) {
 		Manual = true;
 	else if (playerType == "Standard")
 		Standard = true;
+	else if (playerType == "Random")
+		Random = true;
 	else if (playerType == "Greedy")
 		Greedy = true;
 	else if (playerType == "MonteCarlo")
@@ -412,6 +414,48 @@ void Player::standardPlayer(int* currentState, int playSequence) {
 		}
 	}
 }
+
+// Player with random actions (no bias)
+void Player::randomPlayer(int* currentState, int playSequence) {
+	int suitable_actions[10] = { Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty };
+	int action_count = 0;
+
+	// first player
+	if (playSequence == 0) {
+		for (int suit = 0; suit < 4; suit++) {
+			for (int card = 0; card < 8; card++) {
+				if (cards[suit][card])
+					suitable_actions[action_count++] = suit * 10 + card;
+			}
+		}
+	}
+	// need to follow the suit
+	else {
+		int current_suit = currentState[0] / 10;
+
+		for (int suit = 0; suit < 4; suit++) {
+			for (int card = 0; card < 8; card++) {
+				if (cards[suit][card] && (suit == trump || suit == current_suit || card == 0))
+					suitable_actions[action_count++] = suit * 10 + card;
+			}
+		}
+
+		// no suitable card to play
+		if (action_count == 0) {
+			for (int suit = 0; suit < 4; suit++) {
+				for (int card = 0; card < 8; card++) {
+					if (cards[suit][card])
+						suitable_actions[action_count++] = suit * 10 + card;
+				}
+			}
+		}
+	}
+	
+	std::random_device rd;
+	int random_action = suitable_actions[rd() % action_count];
+	currentState[playSequence] = play(random_action / 10, random_action % 10);
+}
+
 // Greedy optimisation-based Approach
 void Player::greedyPlayer(int* currentState, int playSequence) {
 	int playCard = Empty;
@@ -674,7 +718,7 @@ void Player::NNWPlayer(int* currentState, int playSequence, PyObject* pFunc) {
 		pos1 = pos2 + 1;
 	}
 
-	// get four actions that NNW suggests to take
+	// get three actions that NNW suggests to take
 	float action_prob[3] = { 0, 0, 0 };
 	int action[3] = { Empty, Empty ,Empty };
 
@@ -685,15 +729,15 @@ void Player::NNWPlayer(int* currentState, int playSequence, PyObject* pFunc) {
 				if (cards[suit][card]) {
 					if (data[suit * 8 + card] > action_prob[0]) {		// data -> actions[0] -> actions[1] -> actions[2]
 						action_prob[2] = action_prob[1];
-						action_prob[2] = action_prob[1];
+						action[2] = action[1];
 						action_prob[1] = action_prob[0];
-						action_prob[1] = action_prob[0];
+						action[1] = action[0];
 						action_prob[0] = data[suit * 8 + card];
 						action[0] = suit * 10 + card;
 					}
 					else if (data[suit * 8 + card] > action_prob[1]) {		// data -> actions[1] -> actions[2]
 						action_prob[2] = action_prob[1];
-						action_prob[2] = action_prob[1];
+						action[2] = action[1];
 						action_prob[1] = data[suit * 8 + card];
 						action[1] = suit * 10 + card;
 					}
@@ -714,15 +758,15 @@ void Player::NNWPlayer(int* currentState, int playSequence, PyObject* pFunc) {
 				if (cards[suit][card] && (suit == trump || suit == current_suit || card == 0)) {
 					if (data[suit * 8 + card] > action_prob[0]) {		// data -> actions[0] -> actions[1] -> actions[2]
 						action_prob[2] = action_prob[1];
-						action_prob[2] = action_prob[1];
+						action[2] = action[1];
 						action_prob[1] = action_prob[0];
-						action_prob[1] = action_prob[0];
+						action[1] = action[0];
 						action_prob[0] = data[suit * 8 + card];
 						action[0] = suit * 10 + card;
 					}
 					else if (data[suit * 8 + card] > action_prob[1]) {		// data -> actions[1] -> actions[2]
 						action_prob[2] = action_prob[1];
-						action_prob[2] = action_prob[1];
+						action[2] = action[1];
 						action_prob[1] = data[suit * 8 + card];
 						action[1] = suit * 10 + card;
 					}
@@ -741,15 +785,15 @@ void Player::NNWPlayer(int* currentState, int playSequence, PyObject* pFunc) {
 					if (cards[suit][card]) {
 						if (data[suit * 8 + card] > action_prob[0]) {		// data -> actions[0] -> actions[1] -> actions[2]
 							action_prob[2] = action_prob[1];
-							action_prob[2] = action_prob[1];
+							action[2] = action[1];
 							action_prob[1] = action_prob[0];
-							action_prob[1] = action_prob[0];
+							action[1] = action[0];
 							action_prob[0] = data[suit * 8 + card];
 							action[0] = suit * 10 + card;
 						}
 						else if (data[suit * 8 + card] > action_prob[1]) {		// data -> actions[1] -> actions[2]
 							action_prob[2] = action_prob[1];
-							action_prob[2] = action_prob[1];
+							action[2] = action[1];
 							action_prob[1] = data[suit * 8 + card];
 							action[1] = suit * 10 + card;
 						}
@@ -763,7 +807,13 @@ void Player::NNWPlayer(int* currentState, int playSequence, PyObject* pFunc) {
 		}
 	}
 
-	currentState[playSequence] = play(action[0] / 10, action[0] % 10);
+	// randomly choose one of the actions NNW suggests
+	int action_count = -1;
+	while (action[++action_count] != Empty && action_count < 3);
+
+	std::random_device rd;
+	int random_action = rd() % action_count;
+	currentState[playSequence] = play(action[random_action] / 10, action[random_action] % 10);
 }
 
 // update game state after every turn
@@ -831,6 +881,9 @@ void Player::playCard(int* currentState, int playSequence) {
 	}
 	else if (Standard) {
 		standardPlayer(currentState, playSequence);
+	}
+	else if (Random) {
+		randomPlayer(currentState, playSequence);
 	}
 	else if (Greedy) {
 		greedyPlayer(currentState, playSequence);
