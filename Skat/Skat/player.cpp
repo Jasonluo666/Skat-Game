@@ -653,7 +653,7 @@ void Player::MCTSPlayer(int* currentState, int playSequence) {
 	// Time Constraint or Iteration Constraint
 	Skat_MCTS.max_iterations = 0;
 
-	Skat_MCTS.max_millis = 400;
+	Skat_MCTS.max_millis = 200;
 
 	// MCTS
 	Action best_action = Skat_MCTS.run(current_state);
@@ -698,8 +698,9 @@ void Player::NNWPlayer(int* currentState, int playSequence, PyObject* pFunc) {
 	}
 
 	//创建参数:
-	PyObject *pArgs = PyTuple_New(1);		// set parameter number
+	PyObject *pArgs = PyTuple_New(2);		// set parameter number
 	PyTuple_SetItem(pArgs, 0, Py_BuildValue("s", NNW_input.c_str()));		// convert string(c++) data into string(python)
+	PyTuple_SetItem(pArgs, 1, Py_BuildValue("i", turn));
 
 	PyObject *pReturn = NULL;
 	pReturn = PyEval_CallObject(pFunc, pArgs);		// get the return value(python)
