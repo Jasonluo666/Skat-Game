@@ -14,7 +14,7 @@ int main() {
 		PyRun_SimpleString("sys.path.append('C:/Users/ljsPC/Desktop/NNW_Player/')");
 	}
 
-	int declarerWinCount = 0, totalCount = 1000;
+	int declarerWinCount = 0, totalCount = 100;
 	float result = 0;
 
 	History NNWdata[10];	// training data
@@ -96,6 +96,22 @@ int main() {
 
 		for (int i = 0; i < 10; i++)
 			Training_Data[i].close();
+
+		// update the log
+		fstream log_update("C:/Users/ljsPC/Desktop/NNW_Training/train_log.txt");	// read
+		int count = 0;
+		if (log_update.is_open()) {
+			log_update >> count;
+			count += declarerWinCount;
+
+			log_update.close();
+		}
+		log_update.open("C:/Users/ljsPC/Desktop/NNW_Training/train_log.txt");	// write
+		if (log_update.is_open()) {
+			log_update << count;
+
+			log_update.close();
+		}
 	}
 	else {
 		for (int matchCounter = 0; matchCounter < totalCount; matchCounter++) {
@@ -109,6 +125,5 @@ int main() {
 		std::cout << "Result: " << declarerWinCount << "/" << totalCount << " = " << result << endl;
 	}
 
-	std::system("pause");
 	return 0;
 }

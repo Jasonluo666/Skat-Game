@@ -27,6 +27,7 @@ namespace mcts_skat {
 		int play_sequence[3];
 		int current_player;
 		int turn_count;
+		bool player_not_have[3][4];
 	};
 
 	class State {
@@ -131,6 +132,9 @@ namespace mcts_skat {
 				else {
 					for (int suit = 0; suit < 4; suit++) {
 						for (int value = 0; value < 8; value++) {
+							// ***
+							if (this_state.player_not_have[this_state.current_player][suit] == true)
+								continue;
 							if (this_state.gameState[suit][value] == true) {
 								Action* action = new Action();
 								action->suit = suit;
@@ -168,6 +172,8 @@ namespace mcts_skat {
 						}
 					}
 
+					int trump_action_number = actions.size();
+
 					// add current suit cards
 					if (this_state.current_suit != this_state.trump_suit) {
 						for (int value = 0; value < 8; value++) {
@@ -182,7 +188,8 @@ namespace mcts_skat {
 					}
 
 					// no current suit card
-					if (actions.size() == 0) {
+					if ((this_state.current_suit != this_state.trump_suit && actions.size() == trump_action_number)
+						|| actions.size() == 0) {
 						for (int suit = 0; suit < 4; suit++) {
 							for (int value = 0; value < 8; value++) {
 								if (this_state.cards[suit][value] == true) {
@@ -198,30 +205,36 @@ namespace mcts_skat {
 				}
 				else {
 					// add all trumps
-					for (int value = 0; value < 8; value++) {
-						if (this_state.gameState[this_state.trump_suit][value] == true) {
-							Action* action = new Action();
-							action->suit = this_state.trump_suit;
-							action->value = value;
+					// ***
+					if (this_state.player_not_have[this_state.current_player][this_state.trump_suit] == false) {
+						for (int value = 0; value < 8; value++) {
+							if (this_state.gameState[this_state.trump_suit][value] == true) {
+								Action* action = new Action();
+								action->suit = this_state.trump_suit;
+								action->value = value;
 
-							actions.push_back(*action);
+								actions.push_back(*action);
+							}
 						}
-					}
 
-					for (int suit = 0; suit < 4; suit++) {
-						if (suit == this_state.trump_suit || this_state.gameState[suit][0] == false)
-							continue;
-						else {
-							Action* action = new Action();
-							action->suit = suit;
-							action->value = 0;
+						for (int suit = 0; suit < 4; suit++) {
+							if (suit == this_state.trump_suit || this_state.gameState[suit][0] == false)
+								continue;
+							else {
+								Action* action = new Action();
+								action->suit = suit;
+								action->value = 0;
 
-							actions.push_back(*action);
+								actions.push_back(*action);
+							}
 						}
-					}
+					}		
+
+					int trump_action_number = actions.size();
 
 					// add current suit cards
-					if (this_state.current_suit != this_state.trump_suit) {
+					// ***
+					if (this_state.current_suit != this_state.trump_suit && this_state.player_not_have[this_state.current_player][this_state.current_suit] == false) {
 						for (int value = 0; value < 8; value++) {
 							if (this_state.gameState[this_state.current_suit][value] == true && value != 0) {
 								Action* action = new Action();
@@ -234,9 +247,12 @@ namespace mcts_skat {
 					}
 
 					// no current suit card
-					if (actions.size() == 0) {
+					if (actions.size() == trump_action_number || actions.size() == 0) {
 						for (int suit = 0; suit < 4; suit++) {
 							for (int value = 0; value < 8; value++) {
+								// ***
+								if (this_state.player_not_have[this_state.current_player][suit] == true || suit == this_state.trump_suit)
+									continue;
 								if (this_state.gameState[suit][value] == true) {
 									Action* action = new Action();
 									action->suit = suit;
@@ -250,6 +266,10 @@ namespace mcts_skat {
 				}
 			}
 
+			// impossible game state
+			if (actions.size() == 0) {
+
+			}
 			//actions.resize(action_number);
 		}
 
@@ -272,21 +292,28 @@ namespace mcts_skat {
 		const vector<float> evaluate() const {
 			vector<float> rewards(3);
 
-			if (this_state.win_value[this_state.declarer_id] > 61)
-				for (int i = 0; i < 3; i++) {
-					if (i == this_state.declarer_id)
-						rewards[i] = 1;
-					else
-						rewards[i] = 0;
-				}
-			else
-				for (int i = 0; i < 3; i++) {
-					if (i == this_state.declarer_id)
-						rewards[i] = 0;
-					else
-						rewards[i] = 1;
-				}
-
+			// invalid state
+			if (this_state.win_value[0] + this_state.win_value[1] + this_state.win_value[2] < 120) {
+				for (int i = 0; i < 3; i++)
+					rewards[i] = 0;
+			}
+			// normal state
+			else {
+				if (this_state.win_value[this_state.declarer_id] > 61)
+					for (int i = 0; i < 3; i++) {
+						if (i == this_state.declarer_id)
+							rewards[i] = 1;
+						else
+							rewards[i] = 0;
+					}
+				else
+					for (int i = 0; i < 3; i++) {
+						if (i == this_state.declarer_id)
+							rewards[i] = 0;
+						else
+							rewards[i] = 1;
+					}
+			}
 			return rewards;
 		}
 

@@ -18,6 +18,10 @@ Player::Player(int playerNo) {
 
 	for (int i = 0; i < 32; i++)
 		winCards[i] = Empty;
+
+	for (int i = 0; i < 3; i++)
+		for (int j = 0; j < 4; j++)
+			player_not_have[i][j] = false;
 }
 // find the Matadors
 int Player::findGameLevel() {
@@ -435,7 +439,7 @@ void Player::randomPlayer(int* currentState, int playSequence) {
 
 		for (int suit = 0; suit < 4; suit++) {
 			for (int card = 0; card < 8; card++) {
-				if (cards[suit][card] && (suit == trump || suit == current_suit || card == 0))
+				if (cards[suit][card] && suit == current_suit)
 					suitable_actions[action_count++] = suit * 10 + card;
 			}
 		}
@@ -646,6 +650,10 @@ void Player::MCTSPlayer(int* currentState, int playSequence) {
 	input_data.win_value[1] = winValue[1];
 	input_data.win_value[2] = winValue[2];
 
+	for (int player = 0; player < 3; player++)
+		for (int suit = 0; suit < 4; suit++)
+			input_data.player_not_have[player][suit] = player_not_have[player][suit];
+
 	// Monte-Carlo Tree Search (UCT)
 	msa::mcts::UCT<State, Action> Skat_MCTS;
 	State current_state(input_data);
@@ -818,9 +826,23 @@ void Player::NNWPlayer(int* currentState, int playSequence, PyObject* pFunc) {
 }
 
 // update game state after every turn
-void Player::updateState(int* currentState) {
+void Player::updateState(int* currentState, int firstPlayer) {
 	for (int card = 0; card < 3; card++)
 		gameState[currentState[card] / 10][currentState[card] % 10] = true;
+
+	// check if a player cannot follow the suit
+	int suit;
+	if (currentState[0] / 10 == trump || currentState[0] % 10 == 0)
+		suit = trump;
+	else
+		suit = currentState[0] / 10;
+
+	for (int player = 1; player < 3; player++) {
+		if ((firstPlayer + player) % 3 == playerNo)
+			continue;
+		if (!(currentState[player] / 10 == trump || currentState[player] / 10 == suit || currentState[player] % 10 == 0))
+			player_not_have[(firstPlayer + player) % 3][suit] = true;
+	}
 }
 
 // compare two cards (first is the current suit), use decision tree

@@ -21,7 +21,7 @@ public:
 	int numberOfCards();
 	void setPlayerType(string playerType);
 	bool isBigger(int Card1, int Card2);
-	void updateState(int* currentState);
+	void updateState(int* currentState, int firstPlayer);
 	int cardToInt(int suit, int value);
 	void updateValue(int updatedValue[3]);
 	int cardValue(int Card);
@@ -72,6 +72,8 @@ private:
 	bool Learning;
 
 	History record[10];
+
+	bool player_not_have[3][4];
 
 	PyObject* pModule;
 	PyObject* pFunc;

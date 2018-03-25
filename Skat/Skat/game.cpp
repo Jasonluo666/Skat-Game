@@ -116,9 +116,9 @@ void Game(Player player[3], string gameType, string trump) {
 		playerNo = (playerNo + 1) % 3;
 
 		if (turnCounter == 2) {		// one turn finished
-			player[0].updateState(currentState);
-			player[1].updateState(currentState);
-			player[2].updateState(currentState);
+			player[0].updateState(currentState, playerNo);
+			player[1].updateState(currentState, playerNo);
+			player[2].updateState(currentState, playerNo);
 
 
 			cout << "Turn " << counter << " finished" << endl;

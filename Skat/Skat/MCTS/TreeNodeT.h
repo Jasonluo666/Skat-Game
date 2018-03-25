@@ -46,12 +46,11 @@ namespace msa {
                 // if this is the first expansion and we haven't yet got all of the possible actions
                 if(actions.empty()) {
                     // retrieve list of actions from the state
-                    state.get_actions(actions);
+                    state.get_actions(actions);	
 
-					if (actions.empty()) {
-						state.get_actions(actions);
-						state.is_terminal();
-					}			
+					// impossible game state
+					if (actions.empty())
+						return NULL;
 
                     // randomize the order
                     std::random_shuffle(actions.begin(), actions.end());

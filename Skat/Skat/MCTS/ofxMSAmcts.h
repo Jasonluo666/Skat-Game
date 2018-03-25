@@ -119,8 +119,9 @@ namespace msa {
 //						assert(node);	// sanity check
                     }
 
+					TreeNode* is_valid;
                     // 2. EXPAND by adding a single child (if not terminal or not fully expanded)
-                    if(!node->is_fully_expanded() && !node->is_terminal()) node = node->expand();
+                    if(!node->is_fully_expanded() && !node->is_terminal()&& (is_valid = node->expand()) != NULL) node = is_valid;
                     
                     State state(node->get_state());
 
