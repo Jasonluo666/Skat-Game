@@ -185,7 +185,7 @@ void getSkat(bool mapDeal[4][8], int skat[2]) {
 
 }
 // skat game platform
-bool skatGame(string playerType[2], History *NNWdata) {
+bool skatGame(string playerType[2], History *NNWdata, int turn_start_at) {
 	// initialization
 	for (int i = 0; i < 4; i++)
 		for (int j = 0; j < 8; j++)
@@ -201,11 +201,11 @@ bool skatGame(string playerType[2], History *NNWdata) {
 	for (int i = 0; i < 3; i++) {
 		if (i == declarerNo) {
 			cout << "Player " << i << " uses " << playerType[0].c_str() << endl;
-			player[i].setPlayerType(playerType[0]);
+			player[i].setPlayerType(playerType[0], turn_start_at);
 		}
 		else {
 			cout << "Player " << i << " uses " << playerType[1].c_str() << endl;
-			player[i].setPlayerType(playerType[1]);
+			player[i].setPlayerType(playerType[1], turn_start_at);
 		}
 	}
 
@@ -217,7 +217,7 @@ bool skatGame(string playerType[2], History *NNWdata) {
 		cout << "Player " << declarerNo << " Over Bid." << endl;
 		
 		cout << "Restart.." << endl;
-		return skatGame(playerType, NNWdata);
+		return skatGame(playerType, NNWdata, turn_start_at);
 	}
 
 	cout << "Player " << declarerNo << " wins the bid and declares " << gameType.c_str() << " game with trump->" << trump.c_str() << endl;

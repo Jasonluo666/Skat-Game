@@ -86,7 +86,8 @@ void Player::getCard(int card) {
 		this->sortCard();
 }
 // human player
-void Player::setPlayerType(string playerType) {
+void Player::setPlayerType(string playerType, int turn_start_at) {
+	this->turn_start_at = turn_start_at;
 	if (playerType == "Manual")
 		Manual = true;
 	else if (playerType == "Standard")
@@ -659,9 +660,9 @@ void Player::MCTSPlayer(int* currentState, int playSequence) {
 	State current_state(input_data);
 
 	// Time Constraint or Iteration Constraint
-	Skat_MCTS.max_iterations = 0;
+	Skat_MCTS.max_iterations = 800;
 
-	Skat_MCTS.max_millis = 200;
+	Skat_MCTS.max_millis = 0;
 
 	// MCTS
 	Action best_action = Skat_MCTS.run(current_state);
@@ -821,8 +822,15 @@ void Player::NNWPlayer(int* currentState, int playSequence, PyObject* pFunc) {
 	while (action[++action_count] != Empty && action_count < 3);
 
 	std::random_device rd;
-	int random_action = rd() % action_count;
-	currentState[playSequence] = play(action[random_action] / 10, action[random_action] % 10);
+	int random_action_prob = rd() % 100;
+
+	if(random_action_prob >= 25 || action_count == 1)
+		currentState[playSequence] = play(action[0] / 10, action[0] % 10);
+	else if ((random_action_prob >= 13 && random_action_prob < 25) || action_count == 2)
+		currentState[playSequence] = play(action[1] / 10, action[1] % 10);
+	else
+		currentState[playSequence] = play(action[2] / 10, action[2] % 10);
+
 }
 
 // update game state after every turn
@@ -899,33 +907,39 @@ void Player::playCard(int* currentState, int playSequence) {
 	// ************************************************************************ //
 
 	/* plug the play solution here */
-	if (Manual) {
-		manualPlayer(currentState, playSequence);
-	}
-	else if (Standard) {
-		standardPlayer(currentState, playSequence);
-	}
-	else if (Random) {
+	if (turn < this->turn_start_at) {
+		// random actions until the required start turn
 		randomPlayer(currentState, playSequence);
 	}
-	else if (Greedy) {
-		greedyPlayer(currentState, playSequence);
-	}
-	else if (MonteCarlo) {
-		MCTSPlayer(currentState, playSequence);
-	}
-	else if (Learning) {
-		// load the Keras NNW (python)
-		if (pModule == NULL || pFunc == NULL) {
-			// PyRun_SimpleString("import keras");
-			pModule = PyImport_ImportModule("NNW_Player");
-			pFunc = PyObject_GetAttrString(pModule, "nnw_player");
-		}
-
-		NNWPlayer(currentState, playSequence, pFunc);
-	}
 	else {
-		cout << "not suitable player strategies" << endl;
+		if (Manual) {
+			manualPlayer(currentState, playSequence);
+		}
+		else if (Standard) {
+			standardPlayer(currentState, playSequence);
+		}
+		else if (Random) {
+			randomPlayer(currentState, playSequence);
+		}
+		else if (Greedy) {
+			greedyPlayer(currentState, playSequence);
+		}
+		else if (MonteCarlo) {
+			MCTSPlayer(currentState, playSequence);
+		}
+		else if (Learning) {
+			// load the Keras NNW (python)
+			if (pModule == NULL || pFunc == NULL) {
+				// PyRun_SimpleString("import keras");
+				pModule = PyImport_ImportModule("NNW_Player");
+				pFunc = PyObject_GetAttrString(pModule, "nnw_player");
+			}
+
+			NNWPlayer(currentState, playSequence, pFunc);
+		}
+		else {
+			cout << "not suitable player strategies" << endl;
+		}
 	}
 	/* plug the play solution here */
 

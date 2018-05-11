@@ -19,7 +19,7 @@ public:
 	int turnWinner(int* currentState);
 	int calculateValue();
 	int numberOfCards();
-	void setPlayerType(string playerType);
+	void setPlayerType(string playerType, int turn_start_at);
 	bool isBigger(int Card1, int Card2);
 	void updateState(int* currentState, int firstPlayer);
 	int cardToInt(int suit, int value);
@@ -63,6 +63,7 @@ private:
 	bool gameState[4][8];
 	float greedyEstimation[10][2];
 	int winValue[3];
+	int turn_start_at;
 
 	bool Manual;
 	bool Standard;
